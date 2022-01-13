@@ -28,8 +28,13 @@ int valPh;
 
 
 //Variables para conexion Wifi y Mqtt
-const char* ssid = "PCCONTROL.EC";
-const char* password = "PCCONTROLWIFI!";
+//const char* ssid = "PCCONTROL.EC";
+//const char* password = "PCCONTROLWIFI!";
+
+const char* ssid = "Xtrim_PCCONTROL";
+const char* password = "pcCONTROL2021";
+
+
 const char* mqtt_server = "pccontrol.ml";
 const char* idClient = "nodo1prueba";
 const char* userMqtt = "web_client";
@@ -49,7 +54,7 @@ DynamicJsonDocument docBMP(512);
 DynamicJsonDocument docTDS(48);
 DynamicJsonDocument docPH(48);
 //Documento Json para los mensajes recibidos
-DynamicJsonDocument docDisparadores(256);
+DynamicJsonDocument docDisparadores(512);
 
 //docTemp, docPeso, docBMP, docTDS, docPH
 
@@ -72,7 +77,7 @@ const int eepromAdress_2 = 4; // eeprom adress for calibration value load cell 2
 
 void setup() {
   Serial.begin(115200);
-  Serial2.begin(19200, SERIAL_8N1, RxArdu, TxArdu);// serial2 pines 16 y 17
+  Serial2.begin(9600, SERIAL_8N1, RxArdu, TxArdu);// serial2 pines 16 y 17
 
   //Iniciar el wifi y conectar cliente a Broker
   setup_wifi();
@@ -83,15 +88,12 @@ void setup() {
   /*
     float calValue_1; // Variable de calibracion celda 1
     float calValue_2; // Variable de calibracion celda 2
-
     calValue_1 = 761.80;//696.0; // calibrado el
     calValue_2 = 620.64;//733.0; // calibrado el
     calValue_3 = 620.64;//733.0; // calibrado el
-
     LoadCell_1.begin();
     LoadCell_2.begin();
     LoadCell_3.begin();
-
     long stabilisingtime = 2000; // Se neceita algunos segundos para realizar la tara
     byte loadcell_1_rdy = 0;
     byte loadcell_2_rdy = 0;
@@ -100,12 +102,10 @@ void setup() {
       if (!loadcell_1_rdy) loadcell_1_rdy = LoadCell_1.startMultiple(stabilisingtime);
       if (!loadcell_2_rdy) loadcell_2_rdy = LoadCell_2.startMultiple(stabilisingtime);
       if (!loadcell_3_rdy) loadcell_3_rdy = LoadCell_3.startMultiple(stabilisingtime);
-
     }
     LoadCell_1.setCalFactor(calValue_1); // user set calibration value (float)
     LoadCell_2.setCalFactor(calValue_2); // user set calibration value (float)
     LoadCell_3.setCalFactor(calValue_3); // user set calibration value (float)
-
     Serial.println("Arranque de celdas y TARA compeltados");
   */
 }
@@ -209,6 +209,7 @@ void setup_wifi() {
 }
 
 void callback(char* topic, byte* message, unsigned int length) {
+  
   Serial.print("Message arrived on topic: ");
   Serial.print(topic);
   Serial.print(". Message: ");
@@ -225,12 +226,12 @@ void callback(char* topic, byte* message, unsigned int length) {
   if (docDisparadores["nombre"] == "motores") {
     Serial.println("Recibo motores");
   }
+  serializeJson(docDisparadores, Serial2);
   serializeJson(docDisparadores, Serial);
   Serial.println();
   //Serial2.write("hola");
-  serializeJson(docDisparadores, Serial2);
+  
   /* String messageTemp;
-
     for (int i = 0; i < length; i++) {
      Serial.print((char)message[i]);
      messageTemp += (char)message[i];
@@ -266,6 +267,7 @@ void reconnect() {
       Serial.println("connected");
       // Subscribe
       client.subscribe("hidroponia/nodo1/disparadores/#");
+      client.subscribe("hidroponia/nodo1/motores/#");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
